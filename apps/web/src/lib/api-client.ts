@@ -137,11 +137,11 @@ class APIClient {
   }
 
   // Forms
-  async getForms(): Promise<Form[]> {
+  async getForms(): Promise<{ forms: Form[]; pagination?: any }> {
     return this.request('/api/v1/forms');
   }
 
-  async getForm(id: string): Promise<Form> {
+  async getForm(id: string): Promise<{ form: Form }> {
     return this.request(`/api/v1/forms/${id}`);
   }
 
@@ -149,22 +149,25 @@ class APIClient {
     title: string;
     description?: string;
     schema: any;
-    settings: any;
-  }): Promise<Form> {
-    return this.request('/api/v1/forms', {
+    settings?: any;
+  }): Promise<{ form: Form }> {
+    const response = await this.request<Form>('/api/v1/forms', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+    // Wrap the response to match expected format
+    return { form: response };
   }
 
   async updateForm(
     id: string,
     data: Partial<Form>
-  ): Promise<Form> {
-    return this.request(`/api/v1/forms/${id}`, {
+  ): Promise<{ form: Form }> {
+    const response = await this.request<Form>(`/api/v1/forms/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
+    return { form: response };
   }
 
   async deleteForm(id: string): Promise<void> {
@@ -173,22 +176,25 @@ class APIClient {
     });
   }
 
-  async publishForm(id: string): Promise<Form> {
-    return this.request(`/api/v1/forms/${id}/publish`, {
+  async publishForm(id: string): Promise<{ form: Form; publicUrl?: string }> {
+    const response = await this.request<any>(`/api/v1/forms/${id}/publish`, {
       method: 'POST',
     });
+    return { form: response, publicUrl: response.publicUrl };
   }
 
-  async duplicateForm(id: string): Promise<Form> {
-    return this.request(`/api/v1/forms/${id}/duplicate`, {
+  async duplicateForm(id: string): Promise<{ form: Form }> {
+    const response = await this.request<Form>(`/api/v1/forms/${id}/duplicate`, {
       method: 'POST',
     });
+    return { form: response };
   }
 
-  async archiveForm(id: string): Promise<Form> {
-    return this.request(`/api/v1/forms/${id}/archive`, {
+  async archiveForm(id: string): Promise<{ form: Form }> {
+    const response = await this.request<Form>(`/api/v1/forms/${id}/archive`, {
       method: 'POST',
     });
+    return { form: response };
   }
 
   // Public Forms
