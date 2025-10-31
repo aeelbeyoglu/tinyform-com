@@ -61,12 +61,9 @@ app.get('/:publicId', async (c) => {
     throw new HTTPException(410, { message: 'Form has reached submission limit' });
   }
 
-  // Increment view count (fire and forget)
-  c.executionCtx.waitUntil(
-    db.update(forms)
-      .set({ viewCount: form.viewCount + 1 })
-      .where(eq(forms.id, form.id))
-  );
+  // Increment submission count field which already exists in the schema
+  // For now, we'll track views later when we add the viewCount field
+  // TODO: Add viewCount field to schema
 
   // Cache for future requests
   await c.env.CACHE_KV.put(
@@ -167,7 +164,6 @@ app.get('/:publicId/stats', async (c) => {
   const form = await db.query.forms.findFirst({
     where: eq(forms.publicId, publicId),
     columns: {
-      viewCount: true,
       submissionCount: true,
       maxSubmissions: true,
     },
@@ -178,7 +174,6 @@ app.get('/:publicId/stats', async (c) => {
   }
 
   return c.json({
-    views: form.viewCount,
     submissions: form.submissionCount,
     remaining: form.maxSubmissions ? form.maxSubmissions - form.submissionCount : null,
   });

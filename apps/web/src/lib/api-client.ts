@@ -198,17 +198,17 @@ class APIClient {
   }
 
   // Public Forms
-  async getPublicForm(publicId: string): Promise<Form> {
+  async getPublicForm(publicId: string): Promise<any> {
     return this.request(`/api/v1/public/${publicId}`);
   }
 
   async submitPublicForm(
     publicId: string,
     data: Record<string, any>
-  ): Promise<{ success: boolean; submissionId: string }> {
+  ): Promise<{ success: boolean; message?: string; redirectUrl?: string }> {
     return this.request(`/api/v1/public/${publicId}/submit`, {
       method: 'POST',
-      body: JSON.stringify({ data }),
+      body: JSON.stringify(data),
     });
   }
 
