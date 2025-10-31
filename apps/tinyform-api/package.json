@@ -1,0 +1,43 @@
+{
+  "name": "tinyform-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler preview",
+    "cf-typegen": "wrangler types",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx src/db/seed.ts",
+    "test": "vitest",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@auth/core": "^0.37.4",
+    "@auth/drizzle-adapter": "^1.7.4",
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "@neondatabase/serverless": "^0.10.4",
+    "@paralleldrive/cuid2": "^2.2.2",
+    "drizzle-orm": "^0.38.2",
+    "hono": "^4.6.14",
+    "jose": "^5.9.6",
+    "resend": "^4.0.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "dotenv": "^16.4.7",
+    "drizzle-kit": "^0.30.1",
+    "miniflare": "^3.20241205.0",
+    "shadcn": "^3.5.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.99.0"
+  }
+}

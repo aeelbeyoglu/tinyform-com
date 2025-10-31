@@ -1,0 +1,89 @@
+name = "tinyform-api"
+main = "src/index.ts"
+compatibility_date = "2024-10-31"
+compatibility_flags = ["nodejs_compat"]
+
+# Workers Logs
+[observability]
+enabled = true
+
+# Environment variables (will be overridden in production)
+[vars]
+NODE_ENV = "development"
+APP_URL = "http://localhost:3000"
+API_URL = "http://localhost:8787"
+DATABASE_URL = "postgresql://neondb_owner:npg_7piEztbhvuT1@ep-blue-lab-agc5haaw-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+NEXTAUTH_URL = "http://localhost:3000"
+NEXTAUTH_SECRET = "Nn//quLzeDiyHbMlQHORp0g/Qqt4LbiDxyRqoulxvhM="
+EMAIL_FROM = "noreply@tinyform.com"
+ENABLE_SIGNUP = "true"
+ENABLE_AI_GENERATION = "false"
+ENABLE_FILE_UPLOADS = "true"
+MAX_FORMS_FREE = "5"
+MAX_SUBMISSIONS_FREE = "100"
+MAX_FILE_SIZE_MB = "10"
+
+# KV Namespaces
+[[kv_namespaces]]
+binding = "SESSION_KV"
+id = "session_kv_dev"
+preview_id = "session_kv_preview"
+
+[[kv_namespaces]]
+binding = "CACHE_KV"
+id = "cache_kv_dev"
+preview_id = "cache_kv_preview"
+
+[[kv_namespaces]]
+binding = "RATELIMIT_KV"
+id = "ratelimit_kv_dev"
+preview_id = "ratelimit_kv_preview"
+
+# R2 Bucket for file storage
+[[r2_buckets]]
+binding = "FILE_STORAGE"
+bucket_name = "tinyform-files-dev"
+preview_bucket_name = "tinyform-files-preview"
+
+# Queue for async processing
+[[queues.producers]]
+binding = "SUBMISSION_QUEUE"
+queue = "submission-processing"
+
+[[queues.consumers]]
+queue = "submission-processing"
+
+# Durable Objects
+# TODO: Uncomment when AnalyticsObject is implemented
+# [[durable_objects.bindings]]
+# name = "ANALYTICS"
+# class_name = "AnalyticsObject"
+
+# [[migrations]]
+# tag = "v1"
+# new_classes = ["AnalyticsObject"]
+
+# Development settings
+[dev]
+port = 8787
+local_protocol = "http"
+ip = "0.0.0.0"
+
+# Environment-specific configurations
+[env.staging]
+name = "tinyform-api-staging"
+vars = { NODE_ENV = "staging", APP_URL = "https://staging.tinyform.com" }
+
+[env.production]
+name = "tinyform-api"
+vars = { NODE_ENV = "production", APP_URL = "https://tinyform.com" }
+routes = [
+  { pattern = "api.tinyform.com/*", zone_name = "tinyform.com" }
+]
+
+# Rate limiting rules
+[[unsafe.bindings]]
+name = "RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "0"
+simple = { limit = 10, period = 60 }
