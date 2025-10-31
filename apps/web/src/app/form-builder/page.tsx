@@ -1,4 +1,4 @@
-import { FormBuilder } from "@/form-builder/components/form-builder";
+import { ApiAwareFormBuilder } from "@/form-builder/components/api-aware-form-builder";
 
 export const metadata = {
   title: "Modern Form Builder for Shadcn | formcn",
@@ -7,5 +7,5 @@ export const metadata = {
 };
 //======================================
 export default function FormBuilderPage() {
-  return <FormBuilder />;
+  return <ApiAwareFormBuilder />;
 }

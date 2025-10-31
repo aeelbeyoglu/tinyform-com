@@ -129,7 +129,7 @@ app.get('/:id', async (c) => {
     throw new HTTPException(404, { message: 'Form not found' });
   }
 
-  return c.json(form);
+  return c.json({ form });
 });
 
 // PUT /forms/:id - Update a form
