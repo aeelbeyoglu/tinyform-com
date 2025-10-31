@@ -4,9 +4,9 @@ import { HTTPException } from 'hono/http-exception';
 import { createId } from '@paralleldrive/cuid2';
 import type { Env } from '~/types/env';
 import { createDb } from '~/db';
-import { forms } from '~/db/schema';
+import { forms, formSubmissions } from '~/db/schema';
 import { requireAuth, requirePlan } from '~/middleware/auth';
-import { eq, and, desc, count } from 'drizzle-orm';
+import { eq, and, desc, count, sql } from 'drizzle-orm';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -300,6 +300,62 @@ app.post('/:id/archive', async (c) => {
   }
 
   return c.json(archivedForm);
+});
+
+// GET /forms/:id/submissions - List submissions for a form
+app.get('/:id/submissions', async (c) => {
+  const userId = c.get('userId');
+  const formId = c.req.param('id');
+
+  const page = parseInt(c.req.query('page') || '1');
+  const limit = parseInt(c.req.query('limit') || '50');
+  const search = c.req.query('search');
+  const status = c.req.query('status');
+
+  const db = createDb(c.env);
+
+  // Verify form ownership
+  const form = await db.query.forms.findFirst({
+    where: and(
+      eq(forms.id, formId),
+      eq(forms.userId, userId)
+    ),
+  });
+
+  if (!form) {
+    throw new HTTPException(404, { message: 'Form not found' });
+  }
+
+  // Build query conditions
+  const conditions = [eq(formSubmissions.formId, formId)];
+
+  if (status) {
+    conditions.push(eq(formSubmissions.status, status));
+  }
+
+  // Get submissions
+  const submissions = await db.query.formSubmissions.findMany({
+    where: and(...conditions),
+    orderBy: [desc(formSubmissions.createdAt)],
+    limit,
+    offset: (page - 1) * limit,
+  });
+
+  // Get total count
+  const [{ count: totalCount }] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(formSubmissions)
+    .where(and(...conditions));
+
+  return c.json({
+    submissions,
+    pagination: {
+      page,
+      limit,
+      total: Number(totalCount),
+      totalPages: Math.ceil(Number(totalCount) / limit),
+    },
+  });
 });
 
 export default app;

@@ -3,15 +3,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { genFormZodSchema } from "@/form-builder/lib/generate-zod-schema";
-import { flattenFormSteps } from "@/form-builder/lib/form-elements-helpers";
-import type { FormElement, FormStep } from "@/form-builder/form-types";
-import { FormPreview } from "@/form-builder/components/preview/form-preview";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PublicFormRenderer } from "./public-form-renderer";
 
 interface PublicForm {
   publicId: string;
@@ -31,7 +26,6 @@ export default function PublicFormPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [defaultValues, setDefaultValues] = useState<any>({});
 
   // Load form data
   useEffect(() => {
@@ -39,21 +33,6 @@ export default function PublicFormPage() {
       try {
         setLoading(true);
         const response = await apiClient.getPublicForm(publicId);
-
-        // Prepare default values before setting form data
-        const elements = response?.schema ?
-          (response.schema.isMS
-            ? flattenFormSteps(response.schema.formElements as FormStep[]).flat()
-            : (response.schema.formElements?.flat() as FormElement[] || [])
-          ) : [];
-
-        const fields = elements.filter((o: any) => !("static" in o));
-        const defaults = fields.reduce((acc: any, element: any) => {
-          acc[element.name] = element?.defaultValue ?? "";
-          return acc;
-        }, {});
-
-        setDefaultValues(defaults);
         setFormData(response);
       } catch (err: any) {
         console.error("Failed to load form:", err);
@@ -71,26 +50,6 @@ export default function PublicFormPage() {
 
     loadForm();
   }, [publicId]);
-
-  // Flatten form elements and prepare schema
-  const flattenFormElements = formData?.schema ?
-    (formData.schema.isMS
-      ? flattenFormSteps(formData.schema.formElements as FormStep[]).flat()
-      : (formData.schema.formElements?.flat() as FormElement[] || [])
-    ) : [];
-
-  const filteredFormFields = flattenFormElements.filter(
-    (o: any) => !("static" in o)
-  );
-
-  // Setup form with react-hook-form (only after data is loaded)
-  const form = useForm({
-    resolver: filteredFormFields.length > 0 ?
-      zodResolver(genFormZodSchema(filteredFormFields) as any) :
-      undefined,
-    mode: "onBlur",
-    defaultValues: defaultValues,
-  });
 
   // Handle form submission
   async function handleSubmit(data: any) {
@@ -185,10 +144,8 @@ export default function PublicFormPage() {
             )}
           </CardHeader>
           <CardContent>
-            <FormPreview
-              form={form}
-              formElements={formData.schema?.formElements || []}
-              isMS={formData.schema?.isMS || false}
+            <PublicFormRenderer
+              formData={formData}
               onSubmit={handleSubmit}
             />
           </CardContent>

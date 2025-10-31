@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
-import { PlusCircle, FileText, Loader2, Trash2 } from "lucide-react";
+import { PlusCircle, FileText, Loader2, Trash2, Code } from "lucide-react";
 import Link from "next/link";
+import { EmbedCodeDialog } from "@/components/embed-code-dialog";
 
 interface Form {
   id: string;
@@ -25,6 +26,8 @@ export default function FormsPage() {
   const router = useRouter();
   const [forms, setForms] = useState<Form[]>([]);
   const [loading, setLoading] = useState(true);
+  const [embedDialogOpen, setEmbedDialogOpen] = useState(false);
+  const [selectedFormForEmbed, setSelectedFormForEmbed] = useState<Form | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -192,6 +195,16 @@ export default function FormsPage() {
                   >
                     Edit
                   </Button>
+                  {form.status === 'published' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => router.push(`/forms/${form.id}/submissions`)}
+                    >
+                      Submissions
+                    </Button>
+                  )}
                   {form.status === 'draft' && (
                     <Button
                       variant="secondary"
@@ -203,18 +216,32 @@ export default function FormsPage() {
                     </Button>
                   )}
                   {form.status === 'published' && form.publicId && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => {
-                        const url = `${window.location.origin}/f/${form.publicId}`;
-                        navigator.clipboard.writeText(url);
-                        toast.success(`Form link copied: ${url}`);
-                      }}
-                    >
-                      Copy Link
-                    </Button>
+                    <>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => {
+                          const url = `${window.location.origin}/f/${form.publicId}`;
+                          navigator.clipboard.writeText(url);
+                          toast.success(`Form link copied: ${url}`);
+                        }}
+                      >
+                        Copy Link
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => {
+                          setSelectedFormForEmbed(form);
+                          setEmbedDialogOpen(true);
+                        }}
+                      >
+                        <Code className="h-4 w-4 mr-1" />
+                        Embed
+                      </Button>
+                    </>
                   )}
                   <Button
                     variant="ghost"
@@ -240,6 +267,16 @@ export default function FormsPage() {
           <li>Sign in is required to access your forms</li>
         </ol>
       </div>
+
+      {/* Embed Code Dialog */}
+      {selectedFormForEmbed && (
+        <EmbedCodeDialog
+          open={embedDialogOpen}
+          onOpenChange={setEmbedDialogOpen}
+          publicId={selectedFormForEmbed.publicId || ""}
+          formTitle={selectedFormForEmbed.title}
+        />
+      )}
     </div>
   );
 }

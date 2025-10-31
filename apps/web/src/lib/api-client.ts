@@ -213,8 +213,26 @@ class APIClient {
   }
 
   // Submissions
-  async getSubmissions(formId: string): Promise<Submission[]> {
-    return this.request(`/api/v1/forms/${formId}/submissions`);
+  async getSubmissions(formId: string, params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  }): Promise<{ submissions: Submission[]; pagination: any }> {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.status) queryParams.append('status', params.status);
+
+    const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    return this.request(`/api/v1/forms/${formId}/submissions${query}`);
+  }
+
+  async deleteSubmission(submissionId: string): Promise<{ success: boolean }> {
+    return this.request(`/api/v1/submissions/${submissionId}`, {
+      method: 'DELETE',
+    });
   }
 
   async exportSubmissions(

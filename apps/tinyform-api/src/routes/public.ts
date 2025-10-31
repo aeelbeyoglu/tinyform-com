@@ -131,14 +131,13 @@ app.post('/:publicId/submit', async (c) => {
     sessionId: c.req.header('X-Session-ID'),
   };
 
-  // Queue submission for processing
-  await c.env.SUBMISSION_QUEUE.send({
-    id: crypto.randomUUID(),
+  // Save submission directly to database (queue can be added later)
+  const [submission] = await db.insert(formSubmissions).values({
     formId: form.id,
     data: body,
     metadata,
-    timestamp: Date.now(),
-  });
+    status: 'processed',
+  }).returning();
 
   // Update submission count
   await db.update(forms)

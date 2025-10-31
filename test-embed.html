@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TinyForm Embed Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .form-container {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafafa;
+        }
+        .info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .info h3 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
+        }
+        .info ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .info li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TinyForm Embed Test Page</h1>
+        <p>This page demonstrates how to embed TinyForm forms on external websites.</p>
+
+        <div class="info">
+            <h3>📋 How to test:</h3>
+            <ol>
+                <li>Create and publish a form at <a href="http://localhost:3000/forms" target="_blank">http://localhost:3000/forms</a></li>
+                <li>Click the "Embed" button on your published form</li>
+                <li>Copy the embed code (iframe or JavaScript)</li>
+                <li>Replace the placeholder below with your form's publicId</li>
+                <li>Open this HTML file in your browser to see the embedded form</li>
+            </ol>
+        </div>
+
+        <h2>Method 1: IFrame Embed</h2>
+        <div class="form-container">
+            <!-- Replace YOUR_PUBLIC_ID with your actual form's publicId -->
+            <iframe
+                src="http://localhost:3000/embed/YOUR_PUBLIC_ID"
+                width="100%"
+                height="500"
+                frameborder="0"
+                title="Embedded Form"
+                style="border: none; width: 100%; min-height: 500px;">
+            </iframe>
+        </div>
+
+        <h2 style="margin-top: 40px;">Method 2: JavaScript Embed (with auto-resize)</h2>
+        <div class="form-container">
+            <!-- Replace YOUR_PUBLIC_ID with your actual form's publicId -->
+            <div id="tinyform-YOUR_PUBLIC_ID"></div>
+            <script>
+            (function() {
+                // Replace YOUR_PUBLIC_ID with your actual form's publicId
+                var publicId = 'YOUR_PUBLIC_ID';
+                var iframe = document.createElement('iframe');
+                iframe.src = 'http://localhost:3000/embed/' + publicId;
+                iframe.style.width = '100%';
+                iframe.style.border = 'none';
+                iframe.style.minHeight = '500px';
+                iframe.title = 'Embedded Form';
+
+                // Auto-resize iframe based on content
+                window.addEventListener('message', function(e) {
+                    if (e.data.type === 'tinyform-resize' && iframe.contentWindow === e.source) {
+                        iframe.style.height = e.data.height + 'px';
+                    }
+                    // Handle form submission
+                    if (e.data.type === 'tinyform-submitted') {
+                        console.log('Form submitted successfully');
+                        alert('Thank you! Form submitted successfully.');
+                    }
+                    // Handle redirect
+                    if (e.data.type === 'tinyform-redirect') {
+                        window.location.href = e.data.url;
+                    }
+                });
+
+                var container = document.getElementById('tinyform-' + publicId);
+                if (container) {
+                    container.appendChild(iframe);
+                }
+            })();
+            </script>
+        </div>
+
+        <div style="margin-top: 40px; padding: 20px; background: #f0f0f0; border-radius: 8px;">
+            <h3>🚀 Features:</h3>
+            <ul>
+                <li>Auto-resizes based on form content</li>
+                <li>Handles form submission events</li>
+                <li>Supports custom callbacks</li>
+                <li>Cross-domain messaging</li>
+                <li>Mobile responsive</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
