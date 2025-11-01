@@ -10,12 +10,14 @@ import { useForm } from "react-hook-form";
 import { ErrorBoundary } from "react-error-boundary";
 import useFormBuilderStore from "@/form-builder/hooks/use-form-builder-store";
 import React from "react";
-import { ArrowLeft, ArrowUp, Info, Pencil } from "lucide-react";
+import { ArrowLeft, ArrowUp, Info, Pencil, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import useLocalForms from "@/form-builder/hooks/use-local-forms";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ErrorFallback } from "@/components/shared/error-fallback";
+import { apiClient } from "@/lib/api-client";
+import { useAuth } from "@/contexts/auth-context";
 import {
   fieldTypes,
   formFieldTypeWithOptions,
@@ -98,18 +100,14 @@ First, multiple choice questions where users pick from several options. Next, in
 ];
 const useAiFormGenerator = () => {
   const [prompt, setPrompt] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const inputRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const { user } = useAuth();
 
   const { object, submit, isLoading, error, stop } = useObject({
     api: `/api/generate?prompt=${encodeURIComponent(prompt)}`,
     // @ts-ignore error message is verbose and messy
     schema: aiFormSchema,
-    // initialValue: {
-    //   form: {
-    //     title: "New Form",
-    //     fields: list,
-    //   },
-    // },
   });
 
   const handleGenerate = async () => {
@@ -131,32 +129,66 @@ const useAiFormGenerator = () => {
   const saveForm = useLocalForms((s) => s.setForm);
   const router = useRouter();
 
-  const handleSave = () => {
-    toast.message("Saving form...");
-    const formElements = (object?.form?.fields as FormElement[])
-      ?.filter((o) => fieldTypes.includes(o.fieldType as FormFieldType))
-      .map((o: FormElement) => ({
-        ...o,
-        id: o?.id ? o.id : crypto.randomUUID(),
-      }));
-    const formId = crypto.randomUUID();
-    const date = new Date().toISOString();
-    const formName = object?.form?.title ?? "New Form " + date;
-    setFormElements(formElements, {
-      id: formId,
-      name: formName,
-      isMS: false,
-    });
-    // now save in locatForms
-    saveForm({
-      id: formId,
-      name: formName,
-      formElements,
-      createdAt: date,
-      updatedAt: date,
-      isMS: false,
-    });
-    router.push(`/form-builder?id=${formId}`);
+  const handleSave = async () => {
+    setIsSaving(true);
+    toast.message("Saving form to database...");
+
+    try {
+      const formElements = (object?.form?.fields as FormElement[])
+        ?.filter((o) => fieldTypes.includes(o.fieldType as FormFieldType))
+        .map((o: FormElement) => ({
+          ...o,
+          id: o?.id ? o.id : crypto.randomUUID(),
+        }));
+
+      const formName = object?.form?.title ?? "AI Generated Form";
+      const formDescription = object?.form?.description ?? "Generated with AI";
+
+      // Check if user is authenticated
+      if (!user) {
+        // Save to localStorage for non-authenticated users
+        const formId = crypto.randomUUID();
+        const date = new Date().toISOString();
+
+        setFormElements(formElements, {
+          id: formId,
+          name: formName,
+          isMS: false,
+        });
+
+        saveForm({
+          id: formId,
+          name: formName,
+          formElements,
+          createdAt: date,
+          updatedAt: date,
+          isMS: false,
+        });
+
+        toast.success("Form saved locally");
+        router.push(`/form-builder?id=${formId}`);
+        return;
+      }
+
+      // Save to API database for authenticated users
+      const response = await apiClient.createForm({
+        title: formName,
+        description: formDescription,
+        schema: {
+          isMS: false,
+          formElements: formElements,
+        },
+        settings: {},
+      });
+
+      toast.success("Form saved to database!");
+      router.push(`/form-builder?id=${response.form.id}`);
+    } catch (error: any) {
+      console.error("Failed to save form:", error);
+      toast.error(error.message || "Failed to save form");
+    } finally {
+      setIsSaving(false);
+    }
   };
   const handleNew = () => {
     setPrompt("");
