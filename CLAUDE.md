@@ -82,6 +82,9 @@ bun clean:workspaces
 - `components/api-aware-form-builder.tsx`: Smart form builder wrapper with API integration
   - Auto-save every 2 seconds for API-backed forms
   - UUID detection to differentiate API forms from localStorage forms
+  - Maintains form status during auto-save (preserves published state)
+  - Uses useRef for form details to prevent infinite loops
+  - Shows different toast messages for published vs draft forms
 
 **Type System (`form-types.ts`):**
 - Comprehensive union types for all form elements (Input, Textarea, Select, DatePicker, Rating, etc.)
@@ -108,13 +111,17 @@ bun clean:workspaces
 **App Router Pages:**
 - `/` - Landing page
 - `/form-builder` - Main form builder interface with API integration
-- `/forms` - API-backed forms list with publishing and embed options
-- `/forms/[formId]/submissions` - Form submissions viewer with filtering and search
+- `/(main)/forms` - API-backed forms list with publishing, embed, and cache clear options
+- `/(main)/forms/[formId]/submissions` - Form submissions viewer with filtering and search
 - `/f/[publicId]` - Public form submission page for published forms
-- `/embed/[publicId]` - Embeddable form view with minimal styling
+- `/(embed)/embed/[publicId]` - Embeddable form view with minimal styling
 - `/my-forms` - LocalStorage-backed forms list (legacy)
 - `/ai-form-generator` - AI-powered form generation
 - `/api/generate` - AI generation endpoint (OpenAI GPT-4o-mini with streaming)
+
+**Route Groups:**
+- `(main)` - Standard app pages with header and footer
+- `(embed)` - Minimal pages for iframe embedding (no header/footer)
 
 **Key Features:**
 - **AI Form Generation**: Uses Vercel AI SDK with OpenAI, streams form schema generation
@@ -249,6 +256,14 @@ Elements can be grouped in arrays to render side-by-side in flex containers. The
 - **CORS**: Configured for cross-origin requests
 - **Plan Restrictions**: Feature gating by subscription tier
 
+### Caching Strategy
+- **Cloudflare KV Cache**: Public forms cached for 1 hour
+- **Cache Invalidation**: Automatic on form updates
+  - Clears cache when published forms are edited
+  - Updates cache with new data immediately
+- **Development Mode**: Cache skipped entirely for easier testing
+- **Manual Cache Clear**: API endpoint for force refresh (`/api/v1/forms/:id/clear-cache`)
+
 ### Environment Variables
 ```bash
 DATABASE_URL          # PostgreSQL connection string
@@ -292,11 +307,15 @@ OPENAI_API_KEY       # AI form generation
   - Copy-to-clipboard for all embed codes
 
 ### Submissions Management
-- **`/app/forms/[formId]/submissions/page.tsx`**: Submissions viewer
-  - Table view with pagination (10 per page)
+- **`/app/(main)/forms/[formId]/submissions/page.tsx`**: Submissions viewer
+  - Table view with pagination (50 per page)
   - Search across all submission data
-  - Filter by status (all, processed, pending, failed)
+  - Filter by status (all, processed, pending, failed, spam)
   - Detailed submission view in dialog
+  - Schema change handling with visual indicators:
+    - Shows "(Field removed from form)" for old fields
+    - Shows "(New field - no value)" for new fields
+    - Prioritizes current form schema when displaying columns
   - Export functionality (planned for CSV/JSON)
 
 ## Special Considerations
@@ -312,3 +331,17 @@ OPENAI_API_KEY       # AI form generation
 - JSONB fields are used for flexible schema storage
 - React 19 requires proper initialization of controlled components (all inputs must have initial values)
 - Radix UI Select components require non-empty string values (use "all" instead of "")
+
+### Cache Management Best Practices
+- **Published Forms**: Always trigger cache invalidation when updating
+- **Development**: Cache is automatically skipped in development mode
+- **Testing**: Use the manual cache clear button (🔄) on forms list for immediate refresh
+- **API Updates**: Form update endpoint automatically handles cache deletion and refresh
+- **Status Preservation**: Auto-save maintains form status (draft/published) to ensure proper caching
+
+### Schema Changes and Submissions
+- **Backward Compatibility**: Old submissions display even if fields were removed
+- **Forward Compatibility**: New fields show in table with empty values for old submissions
+- **Visual Indicators**: UI clearly marks field changes (removed/new)
+- **Table Display**: Prioritizes current form schema, shows first 7 fields
+- **Detail View**: Shows all fields from both submission and current schema

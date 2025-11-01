@@ -1,5 +1,69 @@
 # TinyForm Implementation Summary
 
+## Latest Updates - November 1, 2025 (Morning Session)
+
+### 🚀 Cache Invalidation & Schema Management
+
+#### Cache Invalidation System ✅
+**Problem Solved**: Published forms weren't updating when edited due to Cloudflare KV cache.
+
+**Solution Implemented**:
+1. **Automatic Cache Invalidation** (`/apps/tinyform-api/src/routes/forms.ts:172-197`)
+   ```typescript
+   // Clear old cache
+   await c.env.CACHE_KV.delete(`form:${updatedForm.publicId}`);
+
+   // Set new cache with updated data
+   await c.env.CACHE_KV.put(
+     `form:${updatedForm.publicId}`,
+     JSON.stringify({ ...formData }),
+     { expirationTtl: 3600 }
+   );
+   ```
+
+2. **Development Mode Override** (`/apps/tinyform-api/src/routes/public.ts:19-26`)
+   - Cache completely skipped in development for easier testing
+   - Always fetches fresh data from database in dev mode
+
+3. **Manual Cache Clear** (`/apps/tinyform-api/src/routes/forms.ts:332-362`)
+   - New API endpoint: `POST /api/v1/forms/:id/clear-cache`
+   - Frontend button (🔄) on forms list for instant cache refresh
+   - Provides user control over cache management
+
+#### Enhanced Auto-Save ✅
+**Location**: `/apps/web/src/form-builder/components/api-aware-form-builder.tsx`
+
+**Key Improvements**:
+- **Status Preservation**: Maintains form status (draft/published) during auto-save
+- **Complete Form Data**: Sends title, description, schema, settings, and status
+- **useRef Pattern**: Prevents infinite loops by storing form details in ref
+- **Smart Toast Messages**: Different messages for published vs draft forms
+  ```typescript
+  if (response.form.status === 'published') {
+    toast.success("Form saved and published version updated");
+  }
+  ```
+
+#### Schema Change Management ✅
+**Location**: `/apps/web/src/app/(main)/forms/[formId]/submissions/page.tsx`
+
+**Features Implemented**:
+1. **Field Status Indicators**:
+   - 🟡 Yellow badge for fields removed from form
+   - 🟢 Green badge for new fields with no value
+
+2. **Smart Column Display**:
+   - Prioritizes current form schema fields
+   - Shows first 7 fields in table view
+   - Full view in detail dialog
+
+3. **Backward/Forward Compatibility**:
+   - Old submissions display even if fields removed
+   - New fields show in table with empty values
+   - All data preserved and accessible
+
+---
+
 ## Latest Updates - October 31, 2025 (Evening Session)
 
 ---
@@ -107,13 +171,16 @@
 - ✅ Form embedding (iframe/JavaScript)
 - ✅ Submissions management
 - ✅ Auto-save functionality
+- ✅ Cache invalidation system
+- ✅ Manual cache management
+- ✅ Schema change handling
 
 **Next Priorities**:
 - 📊 Form analytics dashboard
 - 📥 CSV/JSON export
 - 📧 Email notifications
 
-**Overall MVP Progress**: **90% Complete**
+**Overall MVP Progress**: **95% Complete**
 
 ---
 
@@ -315,5 +382,40 @@ The TinyForm application now has a complete, secure authentication system with A
 
 ---
 
-*Latest update: October 31, 2025, 7:45 PM*
+## 📚 Latest Files Modified (November 1, 2025)
+
+### Modified:
+- `/apps/tinyform-api/src/routes/forms.ts` - Cache invalidation + clear endpoint
+- `/apps/tinyform-api/src/routes/public.ts` - Dev mode cache skip
+- `/apps/web/src/form-builder/components/api-aware-form-builder.tsx` - Enhanced auto-save
+- `/apps/web/src/app/(main)/forms/page.tsx` - Manual cache clear button
+- `/apps/web/src/lib/api-client.ts` - clearFormCache method
+- `/apps/web/src/app/(main)/forms/[formId]/submissions/page.tsx` - Schema change handling
+
+---
+
+## 🧪 How to Test Cache Invalidation
+
+### Test Automatic Cache Invalidation:
+1. Create and publish a form
+2. Add/remove fields in form builder
+3. Wait 2 seconds for auto-save
+4. Refresh the public form URL (`/f/{publicId}`)
+5. ✅ Should show updated fields immediately
+
+### Test Manual Cache Clear:
+1. Navigate to `/forms` page
+2. Find published form
+3. Click refresh button (🔄) next to Embed button
+4. ✅ Should show "Cache cleared!" toast
+5. Public form now shows latest version
+
+### Test Development Mode:
+1. In development, cache is automatically disabled
+2. All form changes reflect immediately
+3. No need to manually clear cache
+
+---
+
+*Latest update: November 1, 2025, 9:30 AM*
 *Initial implementation: October 31, 2025*

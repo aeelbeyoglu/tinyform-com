@@ -1,6 +1,65 @@
 # TinyForm Development Progress
 
-## Session Summary - October 31, 2025 (Latest)
+## Session Summary - November 1, 2025 (Latest)
+
+### 🎯 Today's Major Achievements
+
+#### ✅ Cache Invalidation System
+- **Problem**: Published forms not updating when edited due to stale cache
+- **Solution**: Implemented comprehensive cache invalidation strategy
+  - Auto-clears cache when published forms are updated
+  - Updates cache with fresh data immediately after clearing
+  - Skip cache entirely in development mode for easier testing
+- **Files Modified**:
+  - `/apps/tinyform-api/src/routes/forms.ts` - Added cache invalidation on form updates
+  - `/apps/tinyform-api/src/routes/public.ts` - Skip cache in development mode
+  - `/apps/web/src/form-builder/components/api-aware-form-builder.tsx` - Enhanced auto-save
+
+#### ✅ Manual Cache Clear Feature
+- **New API Endpoint**: `POST /api/v1/forms/:id/clear-cache`
+- **Frontend Integration**: Added refresh button (🔄) on forms list
+- **User Experience**: Users can force cache refresh for any published form
+- **Files Created/Modified**:
+  - `/apps/web/src/lib/api-client.ts` - Added clearFormCache method
+  - `/apps/web/src/app/(main)/forms/page.tsx` - Added cache clear button
+
+#### ✅ Enhanced Auto-Save System
+- **Status Preservation**: Maintains form status (draft/published) during auto-save
+- **Smart Updates**: Only sends necessary fields to API
+- **Infinite Loop Prevention**: Uses useRef for form details
+- **Better UX**: Different toast messages for published vs draft forms
+- **Implementation**: Updated api-aware-form-builder.tsx with enhanced logic
+
+#### ✅ Schema Change Handling Improvements
+- **Backward Compatibility**: Display old submissions even if fields removed
+- **Forward Compatibility**: Show new fields in table with empty values
+- **Visual Indicators**:
+  - Yellow badge: "(Field removed from form)"
+  - Green badge: "(New field - no value)"
+- **Smart Column Display**: Prioritizes current form schema fields
+- **Files Modified**: `/apps/web/src/app/(main)/forms/[formId]/submissions/page.tsx`
+
+### 🐛 Bug Fixes
+1. **Published Form Update Issue**
+   - Root cause: Auto-save not maintaining form status
+   - Fix: Store complete form details in ref, preserve status in updates
+   - Impact: Published forms now properly update cache on edit
+
+2. **Route Group Issues**
+   - Problem: Navbar appearing in embed and public forms
+   - Solution: Created route groups - `(main)` and `(embed)`
+   - Fixed hydration errors with dynamic Header import
+
+### 📊 Testing Results
+- ✅ Published forms update immediately when edited
+- ✅ Cache clears automatically in development mode
+- ✅ Manual cache clear button works correctly
+- ✅ Auto-save preserves form status
+- ✅ Schema changes display properly in submissions viewer
+
+---
+
+## Session Summary - October 31, 2025
 
 ### 🎯 Today's Major Achievements
 
@@ -263,4 +322,34 @@ curl -X POST http://localhost:8787/api/v1/auth/signin \
 
 ---
 
-*Last Updated: October 31, 2025, 7:45 PM*
+---
+
+## 📂 Latest Files Modified (November 1, 2025)
+
+### Modified Files
+- `/apps/tinyform-api/src/routes/forms.ts` - Cache invalidation logic
+- `/apps/tinyform-api/src/routes/public.ts` - Development mode cache skip
+- `/apps/web/src/form-builder/components/api-aware-form-builder.tsx` - Enhanced auto-save
+- `/apps/web/src/app/(main)/forms/page.tsx` - Manual cache clear button
+- `/apps/web/src/lib/api-client.ts` - Cache clear API method
+- `/CLAUDE.md` - Documentation updates
+- `/DEVELOPMENT-PROGRESS.md` - This file
+- `/IMPLEMENTATION-SUMMARY.md` - Summary updates
+
+---
+
+## 📊 Updated Progress Metrics
+
+- **Backend Completion**: 99% (OAuth pending)
+- **API Endpoints**: 100% implemented
+- **Database**: 100% configured
+- **Frontend Integration**: 92% (Analytics dashboard pending)
+- **Public Forms**: 100% complete
+- **Form Embedding**: 100% complete
+- **Submissions Management**: 95% (CSV/JSON export pending)
+- **Cache Management**: 100% complete
+- **Overall MVP**: 95% complete
+
+---
+
+*Last Updated: November 1, 2025, 9:30 AM*
