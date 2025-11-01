@@ -197,6 +197,12 @@ class APIClient {
     return { form: response };
   }
 
+  async clearFormCache(id: string): Promise<{ success: boolean }> {
+    return this.request(`/api/v1/forms/${id}/clear-cache`, {
+      method: 'POST',
+    });
+  }
+
   // Public Forms
   async getPublicForm(publicId: string): Promise<any> {
     return this.request(`/api/v1/public/${publicId}`);

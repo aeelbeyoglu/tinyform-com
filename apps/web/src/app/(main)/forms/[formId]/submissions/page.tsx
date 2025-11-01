@@ -140,12 +140,32 @@ export default function FormSubmissionsPage() {
       .join(", ");
   }
 
-  function getFieldNames(submissions: Submission[]): string[] {
+  function getFieldNames(submissions: Submission[], formSchema?: any): string[] {
     const fieldNames = new Set<string>();
+
+    // First, add fields from the current form schema if available
+    if (formSchema?.formElements) {
+      const schemaFields = Array.isArray(formSchema.formElements) ? formSchema.formElements : [];
+      schemaFields.forEach((element: any) => {
+        if (Array.isArray(element)) {
+          // Handle nested elements (side-by-side)
+          element.forEach((nestedElement: any) => {
+            if (nestedElement.name && !nestedElement.static) {
+              fieldNames.add(nestedElement.name);
+            }
+          });
+        } else if (element.name && !element.static) {
+          fieldNames.add(element.name);
+        }
+      });
+    }
+
+    // Then add fields from submissions (for backward compatibility)
     submissions.forEach(submission => {
       Object.keys(submission.data).forEach(key => fieldNames.add(key));
     });
-    return Array.from(fieldNames).slice(0, 5); // Show first 5 fields in table
+
+    return Array.from(fieldNames).slice(0, 7); // Show first 7 fields in table
   }
 
   if (loading && submissions.length === 0) {
@@ -156,7 +176,7 @@ export default function FormSubmissionsPage() {
     );
   }
 
-  const fieldNames = getFieldNames(submissions);
+  const fieldNames = getFieldNames(submissions, formDetails?.schema);
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -308,16 +328,77 @@ export default function FormSubmissionsPage() {
               <div>
                 <h3 className="font-semibold mb-2">Form Data</h3>
                 <div className="bg-muted rounded-lg p-4 space-y-2">
-                  {Object.entries(selectedSubmission.data).map(([key, value]) => (
-                    <div key={key} className="flex flex-col">
-                      <span className="text-sm font-medium capitalize">
-                        {key.replace(/_/g, " ")}:
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {typeof value === "object" ? JSON.stringify(value, null, 2) : String(value)}
-                      </span>
-                    </div>
-                  ))}
+                  {(() => {
+                    // Get current schema fields
+                    const currentFields = new Set<string>();
+                    if (formDetails?.schema?.formElements) {
+                      const schemaFields = Array.isArray(formDetails.schema.formElements) ? formDetails.schema.formElements : [];
+                      schemaFields.forEach((element: any) => {
+                        if (Array.isArray(element)) {
+                          element.forEach((nestedElement: any) => {
+                            if (nestedElement.name && !nestedElement.static) {
+                              currentFields.add(nestedElement.name);
+                            }
+                          });
+                        } else if (element.name && !element.static) {
+                          currentFields.add(element.name);
+                        }
+                      });
+                    }
+
+                    // Render all submission fields
+                    return Object.entries(selectedSubmission.data).map(([key, value]) => {
+                      const isInCurrentSchema = currentFields.has(key);
+                      return (
+                        <div key={key} className="flex flex-col">
+                          <span className="text-sm font-medium capitalize flex items-center gap-2">
+                            {key.replace(/_/g, " ")}:
+                            {!isInCurrentSchema && (
+                              <span className="text-xs text-yellow-600 dark:text-yellow-400">
+                                (Field removed from form)
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            {typeof value === "object" ? JSON.stringify(value, null, 2) : String(value) || "-"}
+                          </span>
+                        </div>
+                      );
+                    });
+                  })()}
+
+                  {/* Show new fields that don't have values yet */}
+                  {(() => {
+                    const submissionKeys = new Set(Object.keys(selectedSubmission.data));
+                    const newFields: string[] = [];
+
+                    if (formDetails?.schema?.formElements) {
+                      const schemaFields = Array.isArray(formDetails.schema.formElements) ? formDetails.schema.formElements : [];
+                      schemaFields.forEach((element: any) => {
+                        if (Array.isArray(element)) {
+                          element.forEach((nestedElement: any) => {
+                            if (nestedElement.name && !nestedElement.static && !submissionKeys.has(nestedElement.name)) {
+                              newFields.push(nestedElement.name);
+                            }
+                          });
+                        } else if (element.name && !element.static && !submissionKeys.has(element.name)) {
+                          newFields.push(element.name);
+                        }
+                      });
+                    }
+
+                    return newFields.map(field => (
+                      <div key={field} className="flex flex-col">
+                        <span className="text-sm font-medium capitalize flex items-center gap-2">
+                          {field.replace(/_/g, " ")}:
+                          <span className="text-xs text-green-600 dark:text-green-400">
+                            (New field - no value)
+                          </span>
+                        </span>
+                        <span className="text-sm text-muted-foreground">-</span>
+                      </div>
+                    ));
+                  })()}
                 </div>
               </div>
               {selectedSubmission.metadata && (

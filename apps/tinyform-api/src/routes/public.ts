@@ -16,10 +16,13 @@ app.use('*', rateLimiter({ limit: 30, window: 60 }));
 app.get('/:publicId', async (c) => {
   const publicId = c.req.param('publicId');
 
-  // Try to get from cache first
-  const cached = await c.env.CACHE_KV.get(`form:${publicId}`);
-  if (cached) {
-    return c.json(JSON.parse(cached));
+  // Try to get from cache first (skip cache in development for easier testing)
+  const isDevelopment = c.env.ENVIRONMENT === 'development' || !c.env.ENVIRONMENT;
+  if (!isDevelopment) {
+    const cached = await c.env.CACHE_KV?.get(`form:${publicId}`);
+    if (cached) {
+      return c.json(JSON.parse(cached));
+    }
   }
 
   const db = createDb(c.env);
@@ -65,19 +68,25 @@ app.get('/:publicId', async (c) => {
   // For now, we'll track views later when we add the viewCount field
   // TODO: Add viewCount field to schema
 
-  // Cache for future requests
-  await c.env.CACHE_KV.put(
-    `form:${publicId}`,
-    JSON.stringify({
-      publicId: form.publicId,
-      title: form.title,
-      description: form.description,
-      schema: form.schema,
-      settings: form.settings,
-      requireAuth: form.requireAuth,
-    }),
-    { expirationTtl: 3600 } // 1 hour
-  );
+  // Cache for future requests (only in production)
+  if (!isDevelopment && c.env.CACHE_KV) {
+    try {
+      await c.env.CACHE_KV.put(
+        `form:${publicId}`,
+        JSON.stringify({
+          publicId: form.publicId,
+          title: form.title,
+          description: form.description,
+          schema: form.schema,
+          settings: form.settings,
+          requireAuth: form.requireAuth,
+        }),
+        { expirationTtl: 3600 } // 1 hour
+      );
+    } catch (error) {
+      console.error('Failed to cache form:', error);
+    }
+  }
 
   return c.json({
     publicId: form.publicId,

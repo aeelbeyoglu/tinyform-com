@@ -169,6 +169,33 @@ app.put('/:id', async (c) => {
     .where(eq(forms.id, formId))
     .returning();
 
+  // If form is published, clear the old cache and update with new data
+  if (updatedForm.status === 'published' && updatedForm.publicId) {
+    try {
+      // First delete the old cache to ensure fresh data
+      if (c.env.CACHE_KV) {
+        await c.env.CACHE_KV.delete(`form:${updatedForm.publicId}`);
+
+        // Then set the new cache
+        await c.env.CACHE_KV.put(
+          `form:${updatedForm.publicId}`,
+          JSON.stringify({
+            publicId: updatedForm.publicId,
+            title: updatedForm.title,
+            description: updatedForm.description,
+            schema: updatedForm.schema,
+            settings: updatedForm.settings,
+            requireAuth: updatedForm.requireAuth,
+          }),
+          { expirationTtl: 3600 } // 1 hour cache
+        );
+      }
+    } catch (error) {
+      console.error('Failed to update cache:', error);
+      // Continue even if cache update fails
+    }
+  }
+
   return c.json(updatedForm);
 });
 
@@ -300,6 +327,38 @@ app.post('/:id/archive', async (c) => {
   }
 
   return c.json(archivedForm);
+});
+
+// POST /forms/:id/clear-cache - Clear cache for a form
+app.post('/:id/clear-cache', async (c) => {
+  const userId = c.get('userId');
+  const formId = c.req.param('id');
+
+  const db = createDb(c.env);
+
+  // Check ownership
+  const form = await db.query.forms.findFirst({
+    where: and(
+      eq(forms.id, formId),
+      eq(forms.userId, userId)
+    ),
+  });
+
+  if (!form) {
+    throw new HTTPException(404, { message: 'Form not found' });
+  }
+
+  // Clear the cache
+  if (c.env.CACHE_KV && form.publicId) {
+    try {
+      await c.env.CACHE_KV.delete(`form:${form.publicId}`);
+      console.log(`Cache cleared for form ${form.publicId}`);
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+    }
+  }
+
+  return c.json({ success: true, message: 'Cache cleared successfully' });
 });
 
 // GET /forms/:id/submissions - List submissions for a form

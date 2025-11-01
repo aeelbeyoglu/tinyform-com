@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
-import { PlusCircle, FileText, Loader2, Trash2, Code } from "lucide-react";
+import { PlusCircle, FileText, Loader2, Trash2, Code, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { EmbedCodeDialog } from "@/components/embed-code-dialog";
 
@@ -97,6 +97,16 @@ export default function FormsPage() {
     } catch (error) {
       console.error("Failed to publish form:", error);
       toast.error("Failed to publish form");
+    }
+  }
+
+  async function clearFormCache(formId: string) {
+    try {
+      await apiClient.clearFormCache(formId);
+      toast.success("Cache cleared! The form will now show the latest version.");
+    } catch (error) {
+      console.error("Failed to clear cache:", error);
+      toast.error("Failed to clear cache");
     }
   }
 
@@ -240,6 +250,14 @@ export default function FormsPage() {
                       >
                         <Code className="h-4 w-4 mr-1" />
                         Embed
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => clearFormCache(form.id)}
+                        title="Clear cache to force refresh the public form"
+                      >
+                        <RefreshCw className="h-4 w-4" />
                       </Button>
                     </>
                   )}

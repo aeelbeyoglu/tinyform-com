@@ -79,6 +79,9 @@ bun clean:workspaces
   - Key operations: `appendElement`, `dropElement`, `editElement`, `reorder`, `setTemplate`
   - Supports nested form elements (array of elements rendered side-by-side)
   - Multi-step forms use `FormStep[]` with `stepFields`, single-step uses `FormElementList`
+- `components/api-aware-form-builder.tsx`: Smart form builder wrapper with API integration
+  - Auto-save every 2 seconds for API-backed forms
+  - UUID detection to differentiate API forms from localStorage forms
 
 **Type System (`form-types.ts`):**
 - Comprehensive union types for all form elements (Input, Textarea, Select, DatePicker, Rating, etc.)
@@ -104,8 +107,12 @@ bun clean:workspaces
 
 **App Router Pages:**
 - `/` - Landing page
-- `/form-builder` - Main form builder interface
-- `/my-forms` - Saved forms list
+- `/form-builder` - Main form builder interface with API integration
+- `/forms` - API-backed forms list with publishing and embed options
+- `/forms/[formId]/submissions` - Form submissions viewer with filtering and search
+- `/f/[publicId]` - Public form submission page for published forms
+- `/embed/[publicId]` - Embeddable form view with minimal styling
+- `/my-forms` - LocalStorage-backed forms list (legacy)
 - `/ai-form-generator` - AI-powered form generation
 - `/api/generate` - AI generation endpoint (OpenAI GPT-4o-mini with streaming)
 
@@ -113,8 +120,13 @@ bun clean:workspaces
 - **AI Form Generation**: Uses Vercel AI SDK with OpenAI, streams form schema generation
 - **Rate Limiting**: Upstash Redis rate limiting (5 requests per 60s in production)
 - **Analytics**: PostHog integration (with proxy rewrites for `/ingest/*`)
-- **Persistence**: Forms saved to browser localStorage via Zustand persist middleware
+- **Persistence**: Dual system - API-backed forms (PostgreSQL) and localStorage forms (legacy)
 - **Component Library**: Full shadcn/ui component set in `components/ui/`
+- **Public Forms**: Published forms accessible via `/f/[publicId]` without authentication
+- **Form Embedding**: Multiple embed options (iframe, JavaScript with auto-resize, direct link)
+- **Submissions Management**: Full viewer with search, filters, pagination, and detailed view
+- **Auto-save**: Forms auto-save every 2 seconds when edited (API-backed forms only)
+- **Cross-domain Messaging**: PostMessage API for iframe communication and events
 
 **Registry System (`registry/default/`):**
 - Template system for generated code artifacts
@@ -255,10 +267,42 @@ OPENAI_API_KEY       # AI form generation
 - **SSL**: Required
 - **Pooler**: Enabled for better connection management
 
+## Key Components
+
+### Public Form System
+- **`/app/f/[publicId]/page.tsx`**: Public form submission page
+  - No authentication required for submission
+  - Handles form validation and submission to API
+  - Shows success message or redirects based on form settings
+
+- **`/app/f/[publicId]/public-form-renderer.tsx`**: Separate form renderer
+  - Ensures controlled inputs with proper default values
+  - Prevents React controlled/uncontrolled input warnings
+  - Initializes all form fields with defaults before rendering
+
+### Form Embedding System
+- **`/app/embed/[publicId]/page.tsx`**: Embeddable form view
+  - Minimal styling for iframe embedding
+  - PostMessage communication for resize and events
+  - Sends `tinyform-resize`, `tinyform-submitted`, `tinyform-redirect` messages
+
+- **`/components/embed-code-dialog.tsx`**: Embed code generation dialog
+  - Three embed options: iframe, JavaScript, direct link
+  - JavaScript option includes auto-resize functionality
+  - Copy-to-clipboard for all embed codes
+
+### Submissions Management
+- **`/app/forms/[formId]/submissions/page.tsx`**: Submissions viewer
+  - Table view with pagination (10 per page)
+  - Search across all submission data
+  - Filter by status (all, processed, pending, failed)
+  - Detailed submission view in dialog
+  - Export functionality (planned for CSV/JSON)
+
 ## Special Considerations
 
 - The project uses path aliases: `@/*` maps to `src/*` (web), `~/*` maps to `src/*` (tinyform-api)
-- Forms are persisted to localStorage under key `form-builder-store` (temporary, will migrate to API)
+- Forms are persisted to localStorage under key `form-builder-store` (legacy) or API database (new)
 - AI generation is rate-limited per IP address
 - PostHog analytics are proxied through Next.js rewrites to avoid ad blockers
 - Component library is built separately via `bun run build:registry` in web workspace
@@ -266,3 +310,5 @@ OPENAI_API_KEY       # AI form generation
 - Cloudflare Workers require `nodejs_compat` flag for some libraries
 - All timestamps are stored in UTC
 - JSONB fields are used for flexible schema storage
+- React 19 requires proper initialization of controlled components (all inputs must have initial values)
+- Radix UI Select components require non-empty string values (use "all" instead of "")

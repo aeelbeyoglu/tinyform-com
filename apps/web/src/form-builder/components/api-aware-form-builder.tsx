@@ -37,6 +37,7 @@ export function ApiAwareFormBuilder() {
   const formId = searchParams.get("id");
   const [loading, setLoading] = useState(true);
   const [isApiForm, setIsApiForm] = useState(false);
+  const formDetailsRef = useRef<any>(null);
 
   const setFormElements = useFormBuilderStore((s) => s.setFormElements);
   const formElements = useFormBuilderStore((s) => s.formElements);
@@ -44,18 +45,31 @@ export function ApiAwareFormBuilder() {
 
   // Auto-save for API forms (debounced)
   const saveToApi = debounce(async () => {
-    if (!isApiForm || !formId || !user) return;
+    if (!isApiForm || !formId || !user || !formDetailsRef.current) return;
 
     try {
       const formData = {
+        title: formDetailsRef.current.title,
+        description: formDetailsRef.current.description,
         schema: {
           isMS: useFormBuilderStore.getState().isMS,
           formElements: useFormBuilderStore.getState().formElements
-        }
+        },
+        settings: formDetailsRef.current.settings,
+        status: formDetailsRef.current.status // Maintain the current status
       };
 
-      await apiClient.updateForm(formId, formData);
-      console.log("Form auto-saved to API");
+      const response = await apiClient.updateForm(formId, formData);
+
+      // Update local form details with response
+      formDetailsRef.current = response.form;
+
+      // Show different message if form is published
+      if (response.form.status === 'published') {
+        toast.success("Form saved and published version updated");
+      } else {
+        console.log("Form auto-saved to API");
+      }
     } catch (error) {
       console.error("Failed to auto-save:", error);
     }
@@ -75,6 +89,9 @@ export function ApiAwareFormBuilder() {
         try {
           const response = await apiClient.getForm(formId);
           const schema = response.form.schema as any;
+
+          // Store the complete form details
+          formDetailsRef.current = response.form;
 
           setFormElements(schema.formElements || [], {
             isMS: schema.isMS || false,

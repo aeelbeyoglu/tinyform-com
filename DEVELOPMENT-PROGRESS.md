@@ -1,5 +1,52 @@
 # TinyForm Development Progress
-## Session Summary - October 31, 2025
+
+## Session Summary - October 31, 2025 (Latest)
+
+### 🎯 Today's Major Achievements
+
+#### ✅ Priority 1: Public Form Submission
+- Created `/f/[publicId]` route for public form access
+- Implemented form submission without authentication
+- Fixed controlled/uncontrolled input issues with React 19
+- Added success messages and redirect handling
+- Fixed API to save submissions directly to database
+
+#### ✅ Priority 2: Submissions Management
+- Created comprehensive `/forms/[formId]/submissions` page
+- Implemented table view with pagination (10 per page)
+- Added search functionality across all submission data
+- Fixed Radix UI Select component value issue (empty string → "all")
+- Added detailed submission view in dialog
+- Implemented status filtering (all, processed, pending, failed)
+
+#### ✅ Priority 4: Embeddable Form Widget
+- Created `/embed/[publicId]` route for embedded forms
+- Implemented PostMessage API for iframe communication
+- Added auto-resize functionality for iframe content
+- Created embed code dialog with three options:
+  - IFrame embed (simple)
+  - JavaScript embed (with auto-resize)
+  - Direct link
+- Added copy-to-clipboard for all embed codes
+- Created test HTML file for embedding verification
+
+### 🐛 Bug Fixes
+1. **React Controlled/Uncontrolled Input Error**
+   - Created separate `PublicFormRenderer` component
+   - Ensures all form fields have initial values
+   - Properly initializes controlled components
+
+2. **Radix UI Select Component Error**
+   - Changed default filter value from "" to "all"
+   - Updated API client to handle "all" value properly
+
+3. **Form Creation Issues** (from previous session)
+   - Fixed API response format for form creation
+   - Wrapped form response in proper object structure
+
+---
+
+## Session Summary - October 31, 2025 (Earlier)
 
 ---
 
@@ -166,4 +213,54 @@ curl -X POST http://localhost:8787/api/v1/auth/signin \
 
 ---
 
-*Last Updated: October 31, 2025, 5:18 PM*
+### 📂 Files Created/Modified (Latest Session)
+
+#### Created Files
+- `/apps/web/src/app/f/[publicId]/page.tsx` - Public form submission page
+- `/apps/web/src/app/f/[publicId]/public-form-renderer.tsx` - Controlled form renderer
+- `/apps/web/src/app/forms/[formId]/submissions/page.tsx` - Submissions viewer
+- `/apps/web/src/app/embed/[publicId]/page.tsx` - Embeddable form page
+- `/apps/web/src/app/embed/layout.tsx` - Minimal layout for embeds
+- `/apps/web/src/components/embed-code-dialog.tsx` - Embed code generation dialog
+- `/test-embed.html` - Test page for embedding forms
+
+#### Modified Files
+- `/apps/tinyform-api/src/routes/public.ts` - Fixed to save submissions directly
+- `/apps/web/src/app/forms/page.tsx` - Added embed button and dialog
+- `/apps/web/src/lib/api-client.ts` - Added submission-related methods
+
+---
+
+## 📊 Updated Progress Metrics
+
+- **Backend Completion**: 98% (password hashing implemented with PBKDF2)
+- **API Endpoints**: 100% implemented
+- **Database**: 100% configured
+- **Frontend Integration**: 85% (Auth, Forms, Submissions, Embedding complete)
+- **Public Forms**: 100% complete
+- **Form Embedding**: 100% complete
+- **Submissions Management**: 90% (CSV/JSON export pending)
+- **Overall MVP**: 90% complete
+
+---
+
+## 🚀 Remaining Tasks
+
+1. **Form Analytics** (Priority 3)
+   - Dashboard with submission metrics
+   - Completion rates and field analytics
+   - Time-based charts
+
+2. **Export Functionality** (Priority 5)
+   - CSV export for submissions
+   - JSON export for submissions
+   - Bulk operations
+
+3. **Email Notifications** (Priority 6)
+   - New submission alerts
+   - Form sharing via email
+   - Weekly reports
+
+---
+
+*Last Updated: October 31, 2025, 7:45 PM*

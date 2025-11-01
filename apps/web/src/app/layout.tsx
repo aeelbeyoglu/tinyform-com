@@ -29,22 +29,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script
-          src="https://analytics.ahrefs.com/analytics.js"
-          data-key="WoVl2u6H/vqWVNgGbnn6bQ"
-          async
-        ></script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NextTopLoader color="#f54a00" showSpinner={false} speed={300} />
         <Providers>
-          <div className="grid grid-rows-[auto_1fr] h-svh">
-            <Header />
-            {children}
-            <Footer />
-          </div>
+          {children}
         </Providers>
       </body>
     </html>
