@@ -266,8 +266,8 @@ class APIClient {
     return this.request(`/api/v1/analytics/forms/${formId}`);
   }
 
-  async getDashboardAnalytics() {
-    return this.request('/api/v1/analytics/dashboard');
+  async getAnalyticsOverview() {
+    return this.request('/api/v1/analytics/overview');
   }
 
   // User

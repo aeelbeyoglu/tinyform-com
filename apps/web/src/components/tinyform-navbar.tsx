@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FileText, Sparkles, User, LogOut, Settings, LayoutDashboard } from "lucide-react";
+import { FileText, Sparkles, User, LogOut, Settings, LayoutDashboard, BarChart } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -81,6 +81,12 @@ export function TinyFormNavbar() {
                   <Link href="/ai-form-generator">
                     <Sparkles className="mr-2 h-4 w-4" />
                     AI Generator
+                  </Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/analytics">
+                    <BarChart className="mr-2 h-4 w-4" />
+                    Analytics
                   </Link>
                 </Button>
               </>
