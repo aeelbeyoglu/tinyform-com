@@ -93,7 +93,8 @@ class APIClient {
         error: 'Unknown error',
         message: response.statusText,
       }));
-      throw new APIError(response.status, error.message || error.error);
+      console.error('API Error Response:', error);
+      throw new APIError(response.status, error.message || error.error || JSON.stringify(error));
     }
 
     return response.json();

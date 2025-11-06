@@ -167,7 +167,9 @@ export function MyFormsBase() {
           id,
           name: formObject.name,
         });
+        // IMPORTANT: Save to localStorage
         setForm(formObject);
+        console.log("Template saved to localStorage:", formObject);
         router.push(`/form-builder?id=${id}`);
         return;
       }

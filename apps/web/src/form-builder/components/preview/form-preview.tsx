@@ -119,7 +119,7 @@ export function FormPreview({
                         className="flex items-center justify-between flex-wrap sm:flex-nowrap w-full gap-2"
                       >
                         {element.map((el, ii) => (
-                          <div key={el.name + ii} className="w-full">
+                          <div key={el.id || el.name || `nested-element-${i}-${ii}`} className="w-full">
                             <RenderFormElement formElement={el} form={form} />
                           </div>
                         ))}
@@ -127,7 +127,7 @@ export function FormPreview({
                     );
                   }
                   return (
-                    <div key={element.name + i} className="w-full">
+                    <div key={element.id || element.name || `element-${i}`} className="w-full">
                       <RenderFormElement formElement={element} form={form} />
                     </div>
                   );

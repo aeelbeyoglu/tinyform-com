@@ -42,7 +42,7 @@ export const POST = async (req: NextRequest) => {
       schema: aiFormSchema,
       prompt: prompt,
       system:
-        "You are an advanced form generator. Based on the provided form schema and user input, generate a JSON representation of the form elements. Note that the form schema can include both input fields and text-based elements such as titles and descriptions. Exclude any form buttons from the output. Ensure the JSON follows the schema and fully reflects the user’s requirements",
+        "You are an advanced form generator. Based on the provided form schema and user input, generate a JSON representation of the form elements. Note that the form schema can include both input fields and text-based elements such as titles and descriptions. Exclude any form buttons from the output. Ensure the JSON follows the schema and fully reflects the user's requirements. IMPORTANT: Each element MUST have a unique 'name' field (e.g., 'name_field', 'email_field', 'message_field') and a unique 'id' field (use UUID format like 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'). Never leave name or id fields empty or undefined.",
       maxRetries: 2,
       onError: (event) => {
         console.log(event.error);

@@ -23,6 +23,7 @@ interface FormBuilderHeaderProps {
   description?: string;
   status?: 'draft' | 'published' | 'archived';
   isApiForm: boolean;
+  isGuest?: boolean;
   onTitleChange: (title: string) => void;
   onDescriptionChange: (description: string) => void;
   onPublish: () => Promise<void>;
@@ -35,6 +36,7 @@ export function FormBuilderHeader({
   description,
   status = 'draft',
   isApiForm,
+  isGuest = false,
   onTitleChange,
   onDescriptionChange,
   onPublish,
@@ -117,11 +119,18 @@ export function FormBuilderHeader({
                 </Badge>
               )}
 
-              {isApiForm && (
-                <Badge variant="outline" className="gap-1">
+              {isGuest ? (
+                <Badge variant="outline" className="gap-1 border-blue-200 bg-blue-50 text-blue-700">
                   <Sparkles className="h-3 w-3" />
-                  Auto-save enabled
+                  Guest Mode - Sign up to publish
                 </Badge>
+              ) : (
+                isApiForm && (
+                  <Badge variant="outline" className="gap-1">
+                    <Sparkles className="h-3 w-3" />
+                    Auto-save enabled
+                  </Badge>
+                )
               )}
             </div>
 
@@ -169,8 +178,9 @@ export function FormBuilderHeader({
             {status === 'draft' ? (
               <Button
                 onClick={handlePublish}
-                disabled={isPublishing || !isApiForm}
+                disabled={isPublishing}
                 className="gap-2"
+                title={isGuest ? "Sign up to publish your form" : "Publish your form"}
               >
                 {isPublishing ? (
                   <>
@@ -180,7 +190,7 @@ export function FormBuilderHeader({
                 ) : (
                   <>
                     <ExternalLink className="h-4 w-4" />
-                    Publish Form
+                    {isGuest ? "Sign up & Publish" : "Publish Form"}
                   </>
                 )}
               </Button>

@@ -167,22 +167,21 @@ const useAiFormGenerator = () => {
 
         toast.success("Form saved locally");
         router.push(`/form-builder?id=${formId}`);
-        return;
+      } else {
+        // Save to API database for authenticated users
+        const response = await apiClient.createForm({
+          title: formName,
+          description: formDescription,
+          schema: {
+            isMS: false,
+            formElements: formElements,
+          },
+          settings: {},
+        });
+
+        toast.success("Form saved to database!");
+        router.push(`/form-builder?id=${response.form.id}`);
       }
-
-      // Save to API database for authenticated users
-      const response = await apiClient.createForm({
-        title: formName,
-        description: formDescription,
-        schema: {
-          isMS: false,
-          formElements: formElements,
-        },
-        settings: {},
-      });
-
-      toast.success("Form saved to database!");
-      router.push(`/form-builder?id=${response.form.id}`);
     } catch (error: any) {
       console.error("Failed to save form:", error);
       toast.error(error.message || "Failed to save form");

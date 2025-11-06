@@ -9,8 +9,8 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signIn: (email: string, password: string, skipRedirect?: boolean) => Promise<void>;
+  signUp: (email: string, password: string, name: string, skipRedirect?: boolean) => Promise<void>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }
@@ -42,13 +42,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, skipRedirect?: boolean) => {
     try {
       setError(null);
       setLoading(true);
       const response = await apiClient.signIn({ email, password });
       setUser(response.user);
-      router.push('/my-forms');
+      if (!skipRedirect) {
+        router.push('/forms');  // Changed to /forms for consistency
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to sign in');
       throw err;
@@ -57,13 +59,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (email: string, password: string, name: string, skipRedirect?: boolean) => {
     try {
       setError(null);
       setLoading(true);
       const response = await apiClient.signUp({ email, password, name });
       setUser(response.user);
-      router.push('/onboarding');
+      if (!skipRedirect) {
+        router.push('/forms');  // Changed from /onboarding to /forms
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to sign up');
       throw err;
